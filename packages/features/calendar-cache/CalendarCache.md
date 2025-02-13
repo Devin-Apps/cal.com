@@ -1,23 +1,76 @@
-- googleChannelExpiration is a string which might cause problems with date/number comparisons like `lt` in prisma, which can possibly cause problems with date comparisons. Though not practical right now
+# Calendar Cache
 
-## Responsibilities
-- File:`/api/calendar-cache/cron` - Runs every minute and takes care of two things:
-  1. Watching calendars
-    - Identifies calendars that are not watched(identified by `googleChannelId` being null) and watches them
-      - When feature is enabled, it starts watching all related calendars
-      - This is how a newly added SelectedCalendar record gets its googleChannel props set
-      - CalendarService.watchCalendar ensures that the new subscription is not created unnecessarily, reusing existing SelectedCalendar googleChannel props when possible.
-    - Identifies calendars that are watched but have their subscription about to expire(identified by `googleChannelExpiration` being less than current tomorrow's date) and watches them again
-  2. Unwatching calendars
-    - It takes care of cleaning up when the calendar-cache feature flag is disabled.
-- File:`calendar-cache-cleanup`
-  - Deletes all CalendarCache records that have expired
-- File:`googlecalendar/api/webhook`
-  - Populates CalendarCache records by fetching availability.
+The Calendar Cache feature optimizes calendar availability checking by caching calendar data and using webhooks for real-time updates.
+
+## Overview
+
+Calendar Cache improves performance and reduces API calls to third-party calendar services by:
+- Caching calendar availability data
+- Using webhooks for real-time updates
+- Automatically managing calendar subscriptions
+- Cleaning up expired cache entries
+
+## Architecture
+
+### Components
+
+1. **Calendar Watcher** (`/api/calendar-cache/cron`)
+   - Runs every minute
+   - Manages calendar subscriptions:
+     - Watches new calendars (those with `googleChannelId: null`)
+     - Renews expiring subscriptions (before `googleChannelExpiration`)
+     - Cleans up when feature is disabled
+   
+2. **Cache Cleanup** (`calendar-cache-cleanup`)
+   - Maintains cache health by removing expired records
+   - Runs on a scheduled basis
+
+3. **Webhook Handler** (`googlecalendar/api/webhook`)
+   - Receives real-time calendar updates
+   - Updates cache with fresh availability data
 
 ## Availability Checking Flow
-- CalendarService.getAvailability is called 
-- It checks if CalendarCache exists for the calendar
-- If it does, it fetches availability from CalendarCache
-- If it doesn't, it fetches availability from the third party calendar service
-- It doesn't populate/update CalendarCache. That is solely the responsibility of webhook
+
+1. Application requests availability via `CalendarService.getAvailability`
+2. System checks for cached data
+3. If cache exists and is valid:
+   - Returns cached availability
+4. If no cache exists:
+   - Fetches from third-party calendar service
+   - Returns fresh availability
+   - Webhook will handle cache updates separately
+
+## Configuration
+
+### Feature Flag
+Enable/disable the feature through the application settings.
+
+### Cache Duration
+Cache entries expire based on configured duration to ensure data freshness.
+
+## Technical Considerations
+
+### Data Types
+- Note: `googleChannelExpiration` is stored as a string, which requires careful handling in date comparisons (e.g., Prisma's `lt` operator)
+
+### Performance Impact
+- Reduces API calls to third-party calendar services
+- Improves response times for availability checks
+- Minimizes rate limit concerns
+
+## Troubleshooting
+
+### Common Issues
+1. Missing Calendar Updates
+   - Verify webhook endpoint is accessible
+   - Check calendar subscription status
+
+2. Cache Inconsistencies
+   - Confirm cleanup job is running
+   - Verify webhook handler is receiving updates
+
+### Monitoring
+Monitor these metrics for system health:
+- Cache hit/miss rates
+- Webhook reception success rate
+- Subscription renewal success rate
