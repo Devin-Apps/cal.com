@@ -70,12 +70,14 @@ const rule = createRule({
           context.report(reportObj);
         };
 
+        let hasIssues = false;
         nodeArgs.properties?.forEach((property) => {
           if (property.type === "Property") {
             searchIncludeProperty(property, backReporter);
+            hasIssues = true;
           }
         });
-        return null;
+        return hasIssues ? undefined : null;
       },
     };
   },

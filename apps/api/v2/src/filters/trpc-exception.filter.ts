@@ -36,6 +36,7 @@ export class TRPCExceptionFilter implements ExceptionFilter {
         break;
       case "TOO_MANY_REQUESTS":
         statusCode = 429;
+        break;
       default:
         statusCode = 500;
         break;

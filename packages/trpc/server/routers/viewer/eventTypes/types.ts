@@ -79,6 +79,7 @@ const ZUpdateInputSchema = BaseEventTypeUpdateInput.extend({
   aiPhoneCallConfig: aiPhoneCallConfig.refine(
     (data) => {
       if (!data) return true;
+      if (!data.yourPhoneNumber || !data.numberToCall) return false;
       data.yourPhoneNumber = data.yourPhoneNumber || "";
       data.numberToCall = data.numberToCall || "";
       data.guestName = data.guestName ?? undefined;
