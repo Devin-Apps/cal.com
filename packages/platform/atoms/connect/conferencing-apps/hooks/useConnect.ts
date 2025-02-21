@@ -119,6 +119,7 @@ export const useConnect = ({ returnTo, onErrorReturnTo, ...props }: UseConnectGo
         break;
       case GOOGLE_MEET:
         connectNonOauthApp.mutate(app);
+        break;
 
       default:
         break;
