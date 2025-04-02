@@ -48,6 +48,8 @@
 
 # Scheduling infrastructure for absolutely everyone
 
+Cal.com provides a powerful and flexible scheduling platform that works for individuals, teams, and organizations of all sizes.
+
 The open source Calendly successor. You are in charge
 of your own data, workflow, and appearance.
 
